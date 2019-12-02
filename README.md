@@ -9,14 +9,17 @@ bean
     
 cache
     提供数据缓存、获取、定时销毁功能
+    
     * 依赖于task
     
 config
     提供读取Json配置文件信息
+    
     * 依赖于file
     
 controller
     提供controller缓存、注册功能。提供了简易API控制器
+    
     * 依赖于github.com/kataras/iris
     * 依赖于github.com/Lyo-Shur/gorm
     * 依赖于api
@@ -26,10 +29,12 @@ file
     
 form
     提供表单字段、上传文件提取。保存文件到本地功能
+    
     * 依赖于github.com/kataras/iris
     
 sso
     提供根据信息生成票据、使用票据反查信息功能
+    
     * 依赖于github.com/satori/go.uuid
     * 依赖于cache
     
