@@ -1,19 +1,19 @@
 package validator
 
 import (
-	"errors"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 // 校验规则
 type Rule interface {
 	// 判断此表达式能否解析
 	Know(expr string) bool
-	// 进行规则判断 表达式 zi
-	Check(expr string, fieId reflect.StructField, v reflect.Value) error
+	// 进行规则判断 表达式
+	Check(expr string, params map[string]string, paramName string) (bool, error)
 }
 
 // 非空规则
@@ -22,17 +22,26 @@ type Required struct{}
 func (r *Required) Know(expr string) bool {
 	return "required" == expr
 }
-func (r *Required) Check(expr string, fieId reflect.StructField, v reflect.Value) error {
-	// 类型判断
-	if fieId.Type.Kind() == reflect.String {
-		str := v.String()
-		if str == "" {
-			return errors.New("字段" + fieId.Name + "不能为空")
-		}
-		return nil
+func (r *Required) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if !ok {
+		return false, nil
 	}
-	// 当非string类型字符串使用required时
-	return errors.New("字段" + fieId.Name + "类型错误，此处需要string")
+	return true, nil
+}
+
+// 非空规则
+type Ban struct{}
+
+func (b *Ban) Know(expr string) bool {
+	return "ban" == expr
+}
+func (b *Ban) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if ok {
+		return false, nil
+	}
+	return true, nil
 }
 
 // 长度规则
@@ -41,30 +50,30 @@ type Length struct{}
 func (l *Length) Know(expr string) bool {
 	return strings.HasPrefix(expr, "length")
 }
-func (l *Length) Check(expr string, fieId reflect.StructField, v reflect.Value) error {
-	// 类型判断
-	if fieId.Type.Kind() != reflect.String {
-		return errors.New("字段" + fieId.Name + "类型错误，此处需要string")
+func (l *Length) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if !ok {
+		return true, nil
 	}
-	str := v.String()
 	expr = strings.Replace(expr, "length", "", -1)
 	expr = string([]rune(expr)[1 : len(expr)-1])
 	// 长度范围
 	r := strings.Split(expr, "-")
 	start, err := strconv.ParseInt(r[0], 10, 64)
 	if err != nil {
-		return errors.New("字段" + fieId.Name + "限制规则错误")
+		return false, err
 	}
 	end, err := strconv.ParseInt(r[1], 10, 64)
 	if err != nil {
-		return errors.New("字段" + fieId.Name + "限制规则错误")
+		return false, err
 	}
 	// 判断长度
-	length := int64(len(str))
-	if start <= length && length <= end {
-		return nil
+	value := params[paramName]
+	length := int64(utf8.RuneCountInString(value))
+	if start > length || length > end {
+		return false, nil
 	}
-	return errors.New("字段" + fieId.Name + "长度非法")
+	return true, nil
 }
 
 // 范围规则
@@ -73,31 +82,59 @@ type Range struct{}
 func (r *Range) Know(expr string) bool {
 	return strings.HasPrefix(expr, "range")
 }
-func (r *Range) Check(expr string, fieId reflect.StructField, v reflect.Value) error {
-	var val int64
-	// 判断类别
-	switch fieId.Type.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		val = v.Int()
-		expr = strings.Replace(expr, "range", "", -1)
-		expr = string([]rune(expr)[1 : len(expr)-1])
-		// 长度范围
-		r := strings.Split(expr, "-")
-		start, err := strconv.ParseInt(r[0], 10, 64)
-		if err != nil {
-			return errors.New("字段" + fieId.Name + "限制规则错误")
-		}
-		end, err := strconv.ParseInt(r[1], 10, 64)
-		if err != nil {
-			return errors.New("字段" + fieId.Name + "限制规则错误")
-		}
-		// 判断长度
-		if start <= val && val <= end {
-			return nil
-		}
-		return errors.New("字段" + fieId.Name + "范围非法")
+func (r *Range) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if !ok {
+		return true, nil
 	}
-	return errors.New("字段" + fieId.Name + "类型错误，此处需要int")
+	expr = strings.Replace(expr, "range", "", -1)
+	expr = string([]rune(expr)[1 : len(expr)-1])
+	// 长度范围
+	exprs := strings.Split(expr, "-")
+	start, err := strconv.ParseInt(exprs[0], 10, 64)
+	if err != nil {
+		return false, err
+	}
+	end, err := strconv.ParseInt(exprs[1], 10, 64)
+	if err != nil {
+		return false, err
+	}
+	// 对值进行转换
+	val, err := strconv.ParseInt(params[paramName], 10, 64)
+	if err != nil {
+		return false, nil
+	}
+	if start > val || val > end {
+		return false, nil
+	}
+	return true, nil
+}
+
+// 时间日期规则
+type DateTime struct{}
+
+func (r *DateTime) Know(expr string) bool {
+	return strings.HasPrefix(expr, "datetime")
+}
+func (r *DateTime) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if !ok {
+		return true, nil
+	}
+	// 获取参数
+	expr = strings.Replace(expr, "datetime", "", -1)
+	expr = string([]rune(expr)[1 : len(expr)-1])
+
+	// 尝试转换时间
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return false, err
+	}
+	_, err = time.ParseInLocation(expr, params[paramName], loc)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // 正则规则
@@ -106,25 +143,22 @@ type Regexp struct{}
 func (r *Regexp) Know(expr string) bool {
 	return strings.HasPrefix(expr, "regexp")
 }
-func (r *Regexp) Check(expr string, fieId reflect.StructField, v reflect.Value) error {
-	// 类型判断
-	if fieId.Type.Kind() == reflect.String {
-		str := v.String()
-
-		// 获取参数
-		expr = strings.Replace(expr, "regexp", "", -1)
-		expr = string([]rune(expr)[1 : len(expr)-1])
-
-		// 正则匹配
-		matched, err := regexp.MatchString(expr, str)
-		if err != nil {
-			return err
-		}
-		if !matched {
-			return errors.New("字段" + fieId.Name + "格式不匹配")
-		}
-		return nil
+func (r *Regexp) Check(expr string, params map[string]string, paramName string) (bool, error) {
+	_, ok := params[paramName]
+	if !ok {
+		return true, nil
 	}
-	// 当非string类型字符串使用required时
-	return errors.New("字段" + fieId.Name + "类型错误，此处需要string")
+	// 获取参数
+	expr = strings.Replace(expr, "regexp", "", -1)
+	expr = string([]rune(expr)[1 : len(expr)-1])
+
+	// 正则匹配
+	matched, err := regexp.MatchString(expr, params[paramName])
+	if err != nil {
+		return false, err
+	}
+	if !matched {
+		return false, nil
+	}
+	return true, nil
 }

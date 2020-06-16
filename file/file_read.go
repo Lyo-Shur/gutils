@@ -10,7 +10,12 @@ func Read(path string) string {
 	// 尝试打开文件
 	fp, err := os.OpenFile(path, os.O_RDONLY, 0755)
 	// 延迟关闭
-	defer fp.Close()
+	defer func() {
+		err := fp.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	if err != nil {
 		log.Fatal(err)
 	}
