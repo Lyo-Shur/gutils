@@ -13,7 +13,7 @@ type Config struct {
 }
 
 // 校验帮助工具
-type helper struct {
+type Helper struct {
 	// 结构体字段
 	params map[string]string
 	// 校验规则
@@ -23,7 +23,7 @@ type helper struct {
 }
 
 // 获取校验帮助工具
-func Helper(params map[string]string, configJson string) *helper {
+func GetHelper(params map[string]string, configJson string) *Helper {
 	configs := make(map[string][]Config)
 
 	// 解析配置
@@ -32,7 +32,7 @@ func Helper(params map[string]string, configJson string) *helper {
 		panic(err)
 	}
 
-	h := helper{}
+	h := Helper{}
 	h.params = params
 	h.configs = configs
 	// 添加默认规则
@@ -47,12 +47,12 @@ func Helper(params map[string]string, configJson string) *helper {
 }
 
 // 添加自定义规则
-func (h *helper) AddRule(r Rule) {
+func (h *Helper) AddRule(r Rule) {
 	h.rule = append(h.rule, r)
 }
 
 // 执行校验
-func (h *helper) Check() (bool, string, error) {
+func (h *Helper) Check() (bool, string, error) {
 	for key, configs := range h.configs {
 		for i := 0; i < len(configs); i++ {
 			checked := false

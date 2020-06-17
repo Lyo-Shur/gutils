@@ -6,11 +6,11 @@ import (
 )
 
 // bean的工厂
-var f *factory
+var f *Factory
 
 // 工厂结构体
 // 此结构体用来维持Service层和DAO层引用
-type factory struct {
+type Factory struct {
 	m map[string]interface{}
 }
 
@@ -18,9 +18,9 @@ type factory struct {
 var once sync.Once
 
 // 获取bean工厂
-func GetFactory() *factory {
+func GetFactory() *Factory {
 	once.Do(func() {
-		f = &factory{}
+		f = &Factory{}
 		f.m = make(map[string]interface{})
 	})
 	return f
@@ -29,20 +29,20 @@ func GetFactory() *factory {
 // 注册bean
 // 内部使用map进行维持数据结构
 // 所以当注册的键重复时可能导致bean被替换，而发生错误
-func (f *factory) Register(s string, i interface{}) {
+func (f *Factory) Register(s string, i interface{}) {
 	injection(i, f)
 	f.m[s] = i
 }
 
 // 获取bean
 // 根据注册时的键获取bean
-func (f *factory) Get(s string) interface{} {
+func (f *Factory) Get(s string) interface{} {
 	return f.m[s]
 }
 
 // 执行自动注入
 // 将i中所需的接口通过反射注入到i
-func injection(i interface{}, f *factory) {
+func injection(i interface{}, f *Factory) {
 	// 首先反射获取此接口的Type Value
 	it := reflect.TypeOf(i)
 	iv := reflect.ValueOf(i)

@@ -16,7 +16,7 @@ func MapBindToStruct(m map[string]string, v interface{}) error {
 	}
 	// 绑定参数
 	var err error
-	err = bindingParameters(m, it, iv)
+	err = bindingParameters(m, iv)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func MapBindToStruct(m map[string]string, v interface{}) error {
 }
 
 // 绑定参数到结构体
-func bindingParameters(mss map[string]string, it reflect.Type, iv reflect.Value) error {
+func bindingParameters(mss map[string]string, iv reflect.Value) error {
 	// 遍历当前参数
 	for i, v := range mss {
 		// 当当前值不存在时，跳过本次循环
