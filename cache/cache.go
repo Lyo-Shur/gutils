@@ -30,6 +30,22 @@ type Data struct {
 	DeathTime time.Time
 }
 
+// 缓存接口
+type Cache interface {
+	// 设置缓存
+	Set(key string, value interface{})
+	// 设置存活时间
+	SetSurviveTime(key string, duration time.Duration)
+	// 获取缓存
+	Get(key string) Data
+	// 删除缓存
+	Delete(key string)
+	// 设置永生
+	SetEternalLife(key string)
+	// 键是否存在
+	Exist(key string) bool
+}
+
 // 数据持有结构体
 var h *Holder
 
@@ -48,16 +64,6 @@ func GetHolder() *Holder {
 	return h
 }
 
-// 获取缓存数据
-func (h *Holder) Get(key string) Data {
-	v, ok := h.M.Load(key)
-	if ok {
-		d := v.(Data)
-		return d
-	}
-	return Data{}
-}
-
 // 设置缓存数据
 // 不设置存活时间的数据为永生状态
 func (h *Holder) Set(key string, value interface{}) {
@@ -65,11 +71,6 @@ func (h *Holder) Set(key string, value interface{}) {
 	d := Data{}
 	d.Data = value
 	h.M.Store(key, d)
-}
-
-// 删除缓存的数据
-func (h *Holder) Delete(key string) {
-	h.M.Delete(key)
 }
 
 // 设置缓存数据带生命周期
@@ -83,6 +84,21 @@ func (h *Holder) SetSurviveTime(key string, duration time.Duration) {
 	h.M.Store(key, d)
 }
 
+// 获取缓存数据
+func (h *Holder) Get(key string) Data {
+	v, ok := h.M.Load(key)
+	if ok {
+		d := v.(Data)
+		return d
+	}
+	return Data{}
+}
+
+// 删除缓存的数据
+func (h *Holder) Delete(key string) {
+	h.M.Delete(key)
+}
+
 // 设置为永生
 func (h *Holder) SetEternalLife(key string) {
 	v, ok := h.M.Load(key)
@@ -92,4 +108,10 @@ func (h *Holder) SetEternalLife(key string) {
 	d := v.(Data)
 	d.DeathTime = time.Time{}
 	h.M.Store(key, d)
+}
+
+// 获取缓存数据
+func (h *Holder) Exist(key string) bool {
+	_, ok := h.M.Load(key)
+	return ok
 }

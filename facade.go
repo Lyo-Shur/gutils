@@ -8,6 +8,7 @@ import (
 	"github.com/Lyo-Shur/gutils/crypto"
 	"github.com/Lyo-Shur/gutils/file"
 	"github.com/Lyo-Shur/gutils/task"
+	"github.com/Lyo-Shur/gutils/ticket"
 	"github.com/Lyo-Shur/gutils/validator"
 	"time"
 )
@@ -32,9 +33,10 @@ func GetBeanFactory() *Factory {
 
 // cache
 type Data = cache.Data
-type Holder = cache.Holder
+type Cache = cache.Cache
+type CacheHolder = cache.Holder
 
-func GetCacheHolder() *Holder {
+func GetCacheHolder() *CacheHolder {
 	return cache.GetHolder()
 }
 
@@ -73,11 +75,15 @@ func Run(d time.Duration, f func()) {
 	task.Run(d, f)
 }
 
-// validator
-type Config = validator.Config
-type Helper = validator.Helper
+// ticket
+type TicketHolder = ticket.Holder
+type TicketCacheHolder = ticket.CacheHolder
 
-func GetValidatorHelper(params map[string]string, configJson string) *Helper {
+// validator
+type ValidatorConfig = validator.Config
+type ValidatorHelper = validator.Helper
+
+func GetValidatorHelper(params map[string]string, configJson string) *ValidatorHelper {
 	return validator.GetHelper(params, configJson)
 }
 
