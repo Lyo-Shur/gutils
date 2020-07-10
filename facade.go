@@ -4,12 +4,15 @@ import (
 	"github.com/Lyo-Shur/gutils/api"
 	"github.com/Lyo-Shur/gutils/bean"
 	"github.com/Lyo-Shur/gutils/cache"
+	"github.com/Lyo-Shur/gutils/config/properties"
+	"github.com/Lyo-Shur/gutils/config/read"
 	"github.com/Lyo-Shur/gutils/convert"
 	"github.com/Lyo-Shur/gutils/crypto"
 	"github.com/Lyo-Shur/gutils/file"
 	"github.com/Lyo-Shur/gutils/task"
 	"github.com/Lyo-Shur/gutils/ticket"
 	"github.com/Lyo-Shur/gutils/validator"
+	"strings"
 	"time"
 )
 
@@ -38,6 +41,22 @@ type CacheHolder = cache.Holder
 
 func GetCacheHolder() *CacheHolder {
 	return cache.GetHolder()
+}
+
+// config
+func LoadConfig(path string) map[string]string {
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		return LoadConfigFromHTTP(path)
+	}
+	return LoadConfigFromFile(path)
+}
+func LoadConfigFromFile(path string) map[string]string {
+	content := read.File(path)
+	return properties.Load(content)
+}
+func LoadConfigFromHTTP(path string) map[string]string {
+	content := read.HTTP(path)
+	return properties.Load(content)
 }
 
 // convert
