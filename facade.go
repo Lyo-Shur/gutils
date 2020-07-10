@@ -12,6 +12,7 @@ import (
 	"github.com/Lyo-Shur/gutils/task"
 	"github.com/Lyo-Shur/gutils/ticket"
 	"github.com/Lyo-Shur/gutils/validator"
+	"os"
 	"strings"
 	"time"
 )
@@ -57,6 +58,9 @@ func LoadConfigFromFile(path string) map[string]string {
 func LoadConfigFromHTTP(path string) map[string]string {
 	content := read.HTTP(path)
 	return properties.Load(content)
+}
+func LoadConfigFromCMD() map[string]string {
+	return properties.LoadArray(os.Args)
 }
 
 // convert
