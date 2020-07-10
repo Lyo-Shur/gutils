@@ -14,7 +14,6 @@ import (
 	"github.com/Lyo-Shur/gutils/ticket"
 	"github.com/Lyo-Shur/gutils/validator"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -48,12 +47,6 @@ func GetCacheHolder() *CacheHolder {
 // config
 func LoadConfigFromCMD() map[string]string {
 	return properties.LoadArray(os.Args)
-}
-func LoadConfig(path string) map[string]string {
-	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		return LoadConfigFromHTTP(path)
-	}
-	return LoadConfigFromFile(path)
 }
 func LoadConfigFromFile(path string) map[string]string {
 	content := read.File(path)
