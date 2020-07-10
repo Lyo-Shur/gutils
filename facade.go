@@ -6,6 +6,7 @@ import (
 	"github.com/Lyo-Shur/gutils/cache"
 	"github.com/Lyo-Shur/gutils/config/properties"
 	"github.com/Lyo-Shur/gutils/config/read"
+	"github.com/Lyo-Shur/gutils/config/xml"
 	"github.com/Lyo-Shur/gutils/convert"
 	"github.com/Lyo-Shur/gutils/crypto"
 	"github.com/Lyo-Shur/gutils/file"
@@ -45,6 +46,9 @@ func GetCacheHolder() *CacheHolder {
 }
 
 // config
+func LoadConfigFromCMD() map[string]string {
+	return properties.LoadArray(os.Args)
+}
 func LoadConfig(path string) map[string]string {
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		return LoadConfigFromHTTP(path)
@@ -59,8 +63,13 @@ func LoadConfigFromHTTP(path string) map[string]string {
 	content := read.HTTP(path)
 	return properties.Load(content)
 }
-func LoadConfigFromCMD() map[string]string {
-	return properties.LoadArray(os.Args)
+func LoadXmlConfigFromFile(path string, model interface{}) {
+	content := read.File(path)
+	xml.Load(content, model)
+}
+func LoadXmlConfigFromHTTP(path string, model interface{}) {
+	content := read.HTTP(path)
+	xml.Load(content, model)
 }
 
 // convert
