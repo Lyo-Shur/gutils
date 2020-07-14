@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/Lyo-Shur/gutils/task"
+	"github.com/lyoshur/gutils/task"
 	"sync"
 	"time"
 )

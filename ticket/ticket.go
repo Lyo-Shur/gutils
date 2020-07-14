@@ -1,7 +1,7 @@
 package ticket
 
 import (
-	"github.com/Lyo-Shur/gutils/cache"
+	"github.com/lyoshur/gutils/cache"
 	"strings"
 	"sync"
 	"time"
